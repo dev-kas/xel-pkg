@@ -90,6 +90,76 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
 
+  /versions/{id}:
+    get:
+      summary: Get version by ID
+      description: Retrieve a specific version by its numeric ID
+      tags:
+        - Versions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric ID of the version
+          schema:
+            type: integer
+            minimum: 1
+          example: 123
+      responses:
+        '200':
+          description: Version details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /versions/pkg/{id}:
+    get:
+      summary: Get versions for a package
+      description: Retrieve all versions for a specific package with pagination
+      tags:
+        - Versions
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: List of versions for the package
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Version'
+                  total:
+                    type: integer
+                    description: Total number of versions available
+                    example: 1
+                  limit:
+                    type: integer
+                    description: Number of items per page
+                    example: 20
+                  offset:
+                    type: integer
+                    description: Number of items skipped
+                    example: 0
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
 components:
   parameters:
     id:
