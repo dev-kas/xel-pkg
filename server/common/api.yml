@@ -1,0 +1,379 @@
+openapi: 3.0.1
+info:
+  title: xel-pkg
+  description: Official package registry for the Xel programming language.
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+
+paths:
+  /packages:
+    get:
+      summary: Search packages
+      description: Search and list packages with optional filtering and pagination
+      tags:
+        - Packages
+      parameters:
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/tags'
+        - $ref: '#/components/parameters/deprecated'
+      responses:
+        '200':
+          description: List of packages matching the criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+                  total:
+                    type: integer
+                    description: Total number of packages matching the criteria
+                  limit:
+                    type: integer
+                    description: Number of items per page
+                  offset:
+                    type: integer
+                    description: Number of items skipped
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /packages/name/{name}:
+    get:
+      summary: Get package by name
+      description: Retrieve a package by its name (case-insensitive)
+      tags:
+        - Packages
+      parameters:
+        - $ref: '#/components/parameters/name'
+      responses:
+        '200':
+          description: Package details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /packages/id/{id}:
+    get:
+      summary: Get package by ID
+      description: Retrieve a package by its numeric ID
+      tags:
+        - Packages
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Package details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the package
+      schema:
+        type: integer
+        minimum: 1
+      example: 123
+
+    name:
+      name: name
+      in: path
+      required: true
+      description: Name of the package (case-insensitive, alphanumeric and underscores only)
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9_]+$'
+      example: example_package
+
+    query:
+      name: query
+      in: query
+      required: false
+      description: Search query string for full-text search
+      schema:
+        type: string
+      example: http server
+
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of items to return (1-100)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 10
+
+    offset:
+      name: offset
+      in: query
+      required: false
+      description: Number of items to skip for pagination
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      example: 0
+
+    tags:
+      name: tags
+      in: query
+      required: false
+      description: Comma-separated list of tags to filter by (all tags must match)
+      schema:
+        type: string
+      example: web,http,server
+
+    deprecated:
+      name: deprecated
+      in: query
+      required: false
+      description: Include deprecated packages in results
+      schema:
+        type: boolean
+        default: false
+
+  schemas:
+    Package:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique numeric ID of the package
+          example: 123
+        gid:
+          type: integer
+          description: Global unique ID
+          example: 456
+        name:
+          type: string
+          description: Name of the package (lowercase)
+          example: "example_package"
+        latest:
+          $ref: '#/components/schemas/Version'
+        description:
+          type: string
+          description: Description of the package
+          example: "An example package for Xel"
+        author:
+          type: string
+          description: Author of the package
+          example: "John Doe"
+        repo_name:
+          type: string
+          description: Name of the repository
+          example: "example-package"
+        url:
+          type: string
+          format: uri
+          description: URL of the repository
+          example: "https://github.com/username/example-package"
+        mirror:
+          type: string
+          format: uri
+          description: URL of the mirror repository
+          example: "https://gitlab.com/username/example-package"
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags for the package
+          example: ["web", "http", "server"]
+        downloads:
+          type: integer
+          description: Number of downloads
+          example: 1000
+        homepage:
+          type: string
+          format: uri
+          description: Homepage URL of the package
+          example: "https://example.com/package"
+        changelog:
+          type: string
+          format: uri
+          description: URL to the changelog
+          example: "https://example.com/package/changelog"
+        bugs:
+          type: string
+          format: uri
+          description: URL to the issue tracker
+          example: "https://github.com/username/example-package/issues"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp of the last update
+          example: "2023-01-01T12:00:00Z"
+        publishedAt:
+          type: string
+          format: date-time
+          description: Timestamp of when the package was published
+          example: "2023-01-01T00:00:00Z"
+        isDeprecated:
+          type: boolean
+          description: Whether the package is deprecated
+          example: false
+        deprecatedReason:
+          type: string
+          description: Reason for deprecation, if applicable
+          example: "This package is no longer maintained"
+
+    Version:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Version ID
+          example: 789
+        gid:
+          type: integer
+          description: Global unique ID
+          example: 101112
+        versionString:
+          type: string
+          description: Version string (semver)
+          example: "1.0.0"
+        semver:
+          type: object
+          properties:
+            major:
+              type: integer
+              example: 1
+            minor:
+              type: integer
+              example: 0
+            patch:
+              type: integer
+              example: 0
+          required: ["major", "minor", "patch"]
+        package:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          description: MongoDB ObjectId reference to the package
+          example: "507f1f77bcf86cd799439011"
+        downloads:
+          type: integer
+          description: Number of downloads for this version
+          example: 500
+        license:
+          type: string
+          description: License identifier
+          example: "MIT"
+        dist_mode:
+          type: string
+          description: Distribution mode
+          example: "source"
+        tarball:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          description: MongoDB ObjectId reference to the tarball
+          example: "507f1f77bcf86cd799439012"
+        xel:
+          type: object
+          properties:
+            major:
+              type: integer
+            minor:
+              type: integer
+            patch:
+              type: integer
+          required: ["major", "minor", "patch"]
+        virtlang:
+          type: object
+          properties:
+            major:
+              type: integer
+            minor:
+              type: integer
+            patch:
+              type: integer
+          required: ["major", "minor", "patch"]
+        deps:
+          type: array
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            description: MongoDB ObjectId of a dependency package
+          description: List of dependency package IDs
+        updatedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+
+  responses:
+    ValidationError:
+      description: Validation error in request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    msg:
+                      type: string
+                    param:
+                      type: string
+                    location:
+                      type: string
+            example:
+              errors:
+                - msg: "Invalid value"
+                  param: "limit"
+                  location: "query"
+
+    NotFound:
+      description: The requested resource was not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Package not found"
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Internal server error"
+
