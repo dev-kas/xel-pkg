@@ -7,7 +7,7 @@ import counterModel from './counter.model.js';
  * @typedef {Object} VersionDocument
  * @property {Number} id - Unique identifier for the version.
  * @property {Number} gid - Unique identifier for the version (globally unique).
- * @property {String} versionString - String representation of the version.
+ * @property {String} version - String representation of the version.
  * @property {Object} semver - SemVer representation of the version.
  * @property {Number} semver.major - Major version number.
  * @property {Number} semver.minor - Minor version number.
