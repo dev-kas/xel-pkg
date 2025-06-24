@@ -12,20 +12,13 @@ import counterModel from './counter.model.js';
  * @property {Number} semver.major - Major version number.
  * @property {Number} semver.minor - Minor version number.
  * @property {Number} semver.patch - Patch version number.
- * @property {ObjectId} package - ObjectId of the package.
+ * @property {Number} package - ID of the package.
  * @property {Number} downloads - Number of downloads.
  * @property {String} license - License of the package.
  * @property {String} dist_mode - Distribution mode of the package.
- * @property {ObjectId} tarball - ObjectId of the tarball.
- * @property {Object} xel - Xel version.
- * @property {Number} xel.major - Major version number.
- * @property {Number} xel.minor - Minor version number.
- * @property {Number} xel.patch - Patch version number.
- * @property {Object} virtlang - Virtlang version.
- * @property {Number} virtlang.major - Major version number.
- * @property {Number} virtlang.minor - Minor version number.
- * @property {Number} virtlang.patch - Patch version number.
- * @property {ObjectId[]} deps - ObjectId of the dependencies.
+ * @property {Number} tarball - ID of the tarball.
+ * @property {String} xel - Xel version range.
+ * @property {String} engine - Engine version range.
  * @property {Date} updatedAt - Timestamp when the version was last updated.
  * @property {Date} publishedAt - Timestamp when the version was published.
  */
@@ -60,8 +53,7 @@ const versionSchema = new mongoose.Schema(
       },
     },
     package: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Package',
+      type: Number,
       required: true,
     },
     downloads: {
@@ -79,44 +71,17 @@ const versionSchema = new mongoose.Schema(
       enum: ['release', 'pre-release'],
     },
     tarball: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Tarball',
+      type: Number,
       required: true,
     },
     xel: {
-      major: {
-        type: Number,
-        required: true,
-      },
-      minor: {
-        type: Number,
-        required: true,
-      },
-      patch: {
-        type: Number,
-        required: true,
-      },
+      type: String,
+      required: true,
     },
-    virtlang: {
-      major: {
-        type: Number,
-        required: true,
-      },
-      minor: {
-        type: Number,
-        required: true,
-      },
-      patch: {
-        type: Number,
-        required: true,
-      },
+    engine: {
+      type: String,
+      required: true,
     },
-    deps: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Version',
-      },
-    ],
   },
   {
     timestamps: true,
@@ -131,7 +96,7 @@ const versionSchema = new mongoose.Schema(
   }
 );
 
-versionSchema.pre('save', async function (next) {
+versionSchema.pre('save', async function () {
   if (this.isNew && typeof this.gid !== 'number') {
     const { seq: id } = await counterModel.findByIdAndUpdate(
       'versions',
@@ -147,7 +112,6 @@ versionSchema.pre('save', async function (next) {
     );
     this.gid = gid;
   }
-  next();
 });
 
 versionSchema.index({

@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node server/index.js",
+    "start": "node server/index.js | pino-pretty",
     "dev": "nodemon server/index.js --config .nodemonrc.json | pino-pretty",
     "dev:debug": "nodemon server --exec babel-node --config .nodemonrc.json --inspect | pino-pretty",
     "test": "mocha --exit",
@@ -21,8 +21,15 @@
     "express": "^4.21.2",
     "express-openapi-validator": "^5.4.6",
     "express-validator": "^7.2.1",
+    "hasha": "^6.0.0",
     "mongoose": "^8.16.0",
-    "pino": "^9.6.0"
+    "nodemailer": "^7.0.3",
+    "octokit": "^5.0.3",
+    "p-queue": "^8.1.0",
+    "pino": "^9.6.0",
+    "semver": "^7.7.2",
+    "simple-git": "^3.28.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.27.4",

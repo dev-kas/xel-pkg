@@ -11,9 +11,7 @@ class Controller {
           param('id').isInt().withMessage('Invalid package ID').toInt(),
         ];
       case 'byId':
-        return [
-          param('id').isInt().withMessage('Invalid version ID').toInt(),
-        ];
+        return [param('id').isInt().withMessage('Invalid version ID').toInt()];
     }
   }
 
@@ -27,10 +25,7 @@ class Controller {
 
   async getVersionsInPackage(req, res) {
     try {
-      const {
-        limit = 20,
-        offset = 0,
-      } = req.query;
+      const { limit = 20, offset = 0 } = req.query;
 
       // Convert query parameters to the correct types
       const params = {
@@ -38,7 +33,10 @@ class Controller {
         offset: parseInt(offset, 10) || 0,
       };
 
-      const result = await VersionsService.getByPackageId(req.params.id, params);
+      const result = await VersionsService.getByPackageId(
+        req.params.id,
+        params
+      );
       res.json(Array.isArray(result) ? result : []);
     } catch (error) {
       console.error('Search error:', error);

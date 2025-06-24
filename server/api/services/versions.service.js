@@ -12,7 +12,9 @@ class VersionsService {
    * @returns {Promise<Object>} Object containing versions and pagination info
    */
   async getByPackageId(packageId, options = {}) {
-    l.info(`${this.constructor.name}.getByPackageId(${packageId}, ${JSON.stringify(options)})`);
+    l.info(
+      `${this.constructor.name}.getByPackageId(${packageId}, ${JSON.stringify(options)})`
+    );
     try {
       const [versions, total] = await Promise.all([
         db.getByPackageId(packageId, options),
@@ -26,7 +28,10 @@ class VersionsService {
         offset: options.offset || 0,
       };
     } catch (error) {
-      l.error(`Error in VersionsService.getByPackageId(${packageId}, ${JSON.stringify(options)}):`, error);
+      l.error(
+        `Error in VersionsService.getByPackageId(${packageId}, ${JSON.stringify(options)}):`,
+        error
+      );
       throw error;
     }
   }
@@ -69,7 +74,10 @@ class VersionsService {
       }
       return versionDoc;
     } catch (error) {
-      l.error(`Error in VersionsService.getByVersion(${packageId}, ${version}):`, error);
+      l.error(
+        `Error in VersionsService.getByVersion(${packageId}, ${version}):`,
+        error
+      );
       throw error;
     }
   }
@@ -80,11 +88,11 @@ class VersionsService {
    * @returns {Promise<Object>} Created version
    */
   async create(versionData) {
-    l.info(`${this.constructor.name}.create()`, { 
+    l.info(`${this.constructor.name}.create()`, {
       package: versionData.package,
-      version: versionData.version 
+      version: versionData.version,
     });
-    
+
     try {
       // Check if package exists
       const pkg = await Package.findById(versionData.package);
@@ -95,16 +103,21 @@ class VersionsService {
       }
 
       // Check if version already exists
-      const existingVersion = await db.getByVersion(versionData.package, versionData.version);
+      const existingVersion = await db.getByVersion(
+        versionData.package,
+        versionData.version
+      );
       if (existingVersion) {
-        const error = new Error(`Version ${versionData.version} already exists for this package`);
+        const error = new Error(
+          `Version ${versionData.version} already exists for this package`
+        );
         error.status = 409; // Conflict
         throw error;
       }
 
       // Create the version
       const version = await db.create(versionData);
-      
+
       // Update package's latest version if this is the first version or newer than current latest
       const latest = await db.getLatest(versionData.package);
       if (!latest || this._isNewerVersion(version, latest)) {
@@ -165,7 +178,7 @@ class VersionsService {
       }
 
       const deleted = await db.delete(id);
-      
+
       // If this was the latest version, update the package's latest version
       const pkg = await Package.findById(version.package);
       if (pkg.latest.toString() === id) {
@@ -233,10 +246,10 @@ class VersionsService {
   _isNewerVersion(version1, version2) {
     if (version1.semver.major > version2.semver.major) return true;
     if (version1.semver.major < version2.semver.major) return false;
-    
+
     if (version1.semver.minor > version2.semver.minor) return true;
     if (version1.semver.minor < version2.semver.minor) return false;
-    
+
     return version1.semver.patch > version2.semver.patch;
   }
 }

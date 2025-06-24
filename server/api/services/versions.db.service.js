@@ -59,7 +59,7 @@ class VersionsDatabase {
    */
   async getById(id) {
     try {
-      return await Version.findOne({id}).populate('package', 'name');
+      return await Version.findOne({ id }).populate('package', 'name');
     } catch (error) {
       logger.error(`Error finding version by id ${id}:`, error);
       throw error;
@@ -80,12 +80,15 @@ class VersionsDatabase {
         error.status = 404;
         throw error;
       }
-      return await Version.findOne({ 
-        package: pkg._id, 
-        version: version 
+      return await Version.findOne({
+        package: pkg._id,
+        version: version,
       }).populate('package', 'name');
     } catch (error) {
-      logger.error(`Error finding version ${version} for package ${packageId}:`, error);
+      logger.error(
+        `Error finding version ${version} for package ${packageId}:`,
+        error
+      );
       throw error;
     }
   }
@@ -189,7 +192,10 @@ class VersionsDatabase {
         .limit(1)
         .populate('package', 'name');
     } catch (error) {
-      logger.error(`Error getting latest version for package ${packageId}:`, error);
+      logger.error(
+        `Error getting latest version for package ${packageId}:`,
+        error
+      );
       throw error;
     }
   }

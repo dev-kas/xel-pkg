@@ -23,12 +23,14 @@ class Controller {
           query('deprecated').optional().isBoolean().toBoolean(),
         ];
       case 'getById':
-        return [
-          param('id').isInt().withMessage('Invalid package ID').toInt(),
-        ];
+        return [param('id').isInt().withMessage('Invalid package ID').toInt()];
       case 'getByName':
         return [
-          param('name').isString().withMessage('Invalid package name').trim().toLowerCase(),
+          param('name')
+            .isString()
+            .withMessage('Invalid package name')
+            .trim()
+            .toLowerCase(),
         ];
     }
   }

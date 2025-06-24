@@ -9,5 +9,15 @@ export default express
     Controller.validateRequest,
     (req, res) => controller.search(req, res)
   )
-  .get('/name/:name', ...Controller.validate('getByName'), Controller.validateRequest, (req, res) => controller.byName(req, res))
-  .get('/id/:id', ...Controller.validate('getById'), Controller.validateRequest, (req, res) => controller.byId(req, res));
+  .get(
+    '/name/:name',
+    ...Controller.validate('getByName'),
+    Controller.validateRequest,
+    (req, res) => controller.byName(req, res)
+  )
+  .get(
+    '/id/:id',
+    ...Controller.validate('getById'),
+    Controller.validateRequest,
+    (req, res) => controller.byId(req, res)
+  );

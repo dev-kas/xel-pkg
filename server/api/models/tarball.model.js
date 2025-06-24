@@ -7,8 +7,8 @@ import counterModel from './counter.model.js';
  * @typedef {Object} TarballDocument
  * @property {Number} id - Unique identifier for the tarball
  * @property {Number} gid - Unique identifier for the tarball (globally unique)
- * @property {ObjectId} package - ObjectId of the package
- * @property {ObjectId} version - ObjectId of the version
+ * @property {Number} package - ID of the package
+ * @property {Number} version - ID of the version
  * @property {String} url - URL of the tarball
  * @property {Number} size_bytes - Size of the tarball in bytes
  * @property {Object} integrity - Integrity information for the tarball
@@ -29,13 +29,11 @@ const tarballSchema = new mongoose.Schema(
       index: true,
     },
     package: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Package',
+      type: Number,
       required: true,
     },
     version: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Version',
+      type: Number,
       required: true,
     },
     url: {
@@ -74,7 +72,7 @@ const tarballSchema = new mongoose.Schema(
   }
 );
 
-tarballSchema.pre('save', async function (next) {
+tarballSchema.pre('save', async function () {
   if (this.isNew && typeof this.gid !== 'number') {
     const { seq: id } = await counterModel.findByIdAndUpdate(
       'tarballs',
@@ -90,7 +88,6 @@ tarballSchema.pre('save', async function (next) {
     );
     this.gid = gid;
   }
-  next();
 });
 
 export default mongoose.model('Tarball', tarballSchema);

@@ -8,7 +8,7 @@ import counterModel from './counter.model.js';
  * @property {Number} id - Unique identifier for the package
  * @property {Number} gid - Unique identifier for the package (globally unique)
  * @property {String} name - Name of the package
- * @property {ObjectId} latest - ObjectId of the latest version of the package
+ * @property {Number} latest - ID of the latest version of the package
  * @property {String} description - Description of the package
  * @property {String} author - Author of the package
  * @property {String} repo_name - Name of the repository
@@ -16,9 +16,6 @@ import counterModel from './counter.model.js';
  * @property {String} mirror - URL of the mirror
  * @property {String[]} tags - Tags for the package
  * @property {Number} downloads - Number of downloads
- * @property {String} homepage - Homepage of the package
- * @property {String} changelog - Changelog of the package
- * @property {String} bugs - Bug tracker URL
  * @property {Date} updatedAt - Timestamp when the package was last updated
  * @property {Date} publishedAt - Timestamp when the package was published
  * @property {Boolean} isDeprecated - Whether the package is deprecated
@@ -44,8 +41,7 @@ const packageSchema = new mongoose.Schema(
       lowercase: true,
     },
     latest: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Version',
+      type: Number,
     },
     description: {
       type: String,
@@ -53,11 +49,6 @@ const packageSchema = new mongoose.Schema(
       trim: true,
     },
     author: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    repo_name: {
       type: String,
       required: true,
       trim: true,
@@ -83,18 +74,6 @@ const packageSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
-    },
-    homepage: {
-      type: String,
-      trim: true,
-    },
-    changelog: {
-      type: String,
-      trim: true,
-    },
-    bugs: {
-      type: String,
-      trim: true,
     },
     updatedAt: {
       type: Date,
@@ -126,7 +105,7 @@ const packageSchema = new mongoose.Schema(
   }
 );
 
-packageSchema.pre('save', async function (next) {
+packageSchema.pre('save', async function () {
   if (this.isNew && typeof this.gid !== 'number') {
     const { seq: id } = await counterModel.findByIdAndUpdate(
       'packages',
@@ -142,7 +121,6 @@ packageSchema.pre('save', async function (next) {
     );
     this.gid = gid;
   }
-  next();
 });
 
 // Index for faster search

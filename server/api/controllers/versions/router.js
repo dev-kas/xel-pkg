@@ -9,4 +9,9 @@ export default express
     Controller.validateRequest,
     (req, res) => controller.byId(req, res)
   )
-  .get('/pkg/:id', ...Controller.validate('getVersionsInPackage'), Controller.validateRequest, (req, res) => controller.getVersionsInPackage(req, res));
+  .get(
+    '/pkg/:id',
+    ...Controller.validate('getVersionsInPackage'),
+    Controller.validateRequest,
+    (req, res) => controller.getVersionsInPackage(req, res)
+  );
