@@ -16,7 +16,6 @@ import counterModel from './counter.model.js';
  * @property {Number} downloads - Number of downloads.
  * @property {String} license - License of the package.
  * @property {String} dist_mode - Distribution mode of the package.
- * @property {Number} tarball - ID of the tarball.
  * @property {String} xel - Xel version range.
  * @property {String} engine - Engine version range.
  * @property {Date} updatedAt - Timestamp when the version was last updated.
@@ -69,10 +68,6 @@ const versionSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: ['release', 'pre-release'],
-    },
-    tarball: {
-      type: Number,
-      required: true,
     },
     xel: {
       type: String,
