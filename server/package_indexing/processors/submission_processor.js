@@ -9,6 +9,8 @@ import cleanup from '../utils/cleanup.js';
 import Tarball from '../../api/models/tarball.model.js';
 import Package from '../../api/models/package.model.js';
 import Version from '../../api/models/version.model.js';
+import mongoose from 'mongoose';
+import EmailService from '../services/email.service.js';
 
 export const queue = new PQueue({
   concurrency: Number(process.env.PACKAGE_INDEXING_CONCURRENCY) || 5,
@@ -43,10 +45,16 @@ queue.on('error', (error) => {
 export default class Processor {
   constructor(repo, notifyEmail) {
     this.repo = repo;
-    this.notifyEmail = notifyEmail;
+    this.email = new EmailService(notifyEmail);
   }
 
   async process() {
+    await this.email.send(
+      '[Xel Package Registry] 🚀 Your Package is Being Indexed!',
+      'Great news! Your package has started its indexing journey. This process usually takes just a few minutes. Why not take a quick break? Your package will be ready before you know it!'
+    );
+    const session = await mongoose.startSession();
+    let didBeginTransaction = false;
     let repoClonePath = null;
     try {
       const { id, git, repoClonePath: rcp, tags } = await phase1(this.repo);
@@ -68,6 +76,8 @@ export default class Processor {
         repo_creation_res.data.owner.login
       );
 
+      session.startTransaction();
+      didBeginTransaction = true;
       const pkg = new Package({
         name: data.packageName,
         latest: -1,
@@ -84,36 +94,41 @@ export default class Processor {
       const oldPkg = await Package.findOne({ name: data.packageName });
       if (oldPkg && oldPkg.url !== this.repo) {
         throw new Error('Package already exists');
+      } else if (oldPkg) {
+        await oldPkg.deleteOne({ session });
+        await Version.deleteMany({ package: oldPkg.id }, { session });
+        await Tarball.deleteMany({ package: oldPkg.id }, { session });
       }
 
-      await pkg.save();
+      await pkg.save({ session });
 
       const vers = (
         await Promise.allSettled(
           data.manifests.map(async (manifest) => {
             const xel = new semver.Range(manifest.xel);
             const engine = new semver.Range(manifest.engine);
-            console.log('pkg', pkg);
-            return Version.create({
-              package: pkg.id,
-              version: semver.clean(manifest.version),
-              semver: {
-                major: semver.major(manifest.version),
-                minor: semver.minor(manifest.version),
-                patch: semver.patch(manifest.version),
-              },
-              xel: xel.range,
-              engine: engine.range,
-              tarball:
-                tarballs.find(
-                  (tarball) =>
-                    semver.clean(tarball.tag) === semver.clean(manifest.version)
-                )?.id || -1,
-              license: manifest.license,
-              dist_mode: semver.prerelease(manifest.version)
-                ? 'pre-release'
-                : 'release',
-            });
+
+            const [ver] = await Version.create(
+              [
+                {
+                  package: pkg.id,
+                  version: semver.clean(manifest.version),
+                  semver: {
+                    major: semver.major(manifest.version),
+                    minor: semver.minor(manifest.version),
+                    patch: semver.patch(manifest.version),
+                  },
+                  xel: xel.range,
+                  engine: engine.range,
+                  license: manifest.license,
+                  dist_mode: semver.prerelease(manifest.version)
+                    ? 'pre-release'
+                    : 'release',
+                },
+              ],
+              { session }
+            );
+            return ver;
           })
         )
       ).map((v) => {
@@ -124,31 +139,25 @@ export default class Processor {
         }
       });
 
-      pkg.latest = vers[0]?.id || -1;
-      if (oldPkg) {
-        oldPkg.latest = pkg.latest;
-        oldPkg.description = pkg.description;
-        oldPkg.author = pkg.author;
-        oldPkg.mirror = pkg.mirror;
-        oldPkg.tags = pkg.tags;
-        oldPkg.isDeprecated = pkg.isDeprecated;
-        oldPkg.deprecatedReason = pkg.deprecatedReason;
-        await oldPkg.save();
-      } else {
-        await pkg.save();
-      }
+      pkg.latest = vers[0]?.id ?? -1;
+      await pkg.save({ session });
 
       const tarballDocuments = tarballs.map((tarball, i) => {
-        return Tarball.create({
-          package: pkg.id,
-          version: vers[i]?.id || -1,
-          url: tarball.url,
-          size_bytes: tarball.size,
-          integrity: {
-            algorithm: tarball.hashAlgo,
-            hash: tarball.hash,
-          },
-        });
+        return Tarball.create(
+          [
+            {
+              package: pkg.id,
+              version: vers[i]?.id ?? -1,
+              url: tarball.url,
+              size_bytes: tarball.size,
+              integrity: {
+                algorithm: tarball.hashAlgo,
+                hash: tarball.hash,
+              },
+            },
+          ],
+          { session }
+        );
       });
 
       (await Promise.allSettled(tarballDocuments)).forEach((result, i) => {
@@ -158,12 +167,26 @@ export default class Processor {
           l.error(`Tarball ${i + 1} saving failed: ${result.reason}`);
         }
       });
+
+      session.commitTransaction();
+      await this.email.send(
+        '[Xel Package Registry] 🎉 Package Successfully Indexed!',
+        `Hooray! Your package \`${data.packageName}\` has been successfully indexed and is now live in the registry! 🚀\n\nThank you for contributing to our ecosystem - happy coding!`
+      );
     } catch (error) {
       l.error(`Submission processing error: ${error}`);
+      if (didBeginTransaction) {
+        await session.abortTransaction();
+      }
+      await this.email.send(
+        '[Xel Package Registry] ⚠️ Package Indexing Issue',
+        `We encountered an issue while indexing your package. Here's what went wrong:\n\n\`${error.message}\`\n\nDon't worry, our team has been notified. Please review the error and try again. If the problem persists, feel free to reach out to our support team. We're here to help!`
+      );
     } finally {
       if (repoClonePath) {
         await cleanup(repoClonePath);
       }
+      session.endSession();
     }
   }
 }
