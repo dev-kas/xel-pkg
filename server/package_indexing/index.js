@@ -5,7 +5,9 @@ export default function IndexPackage(repo, notifyEmail) {
   const processor = new Processor(repo, notifyEmail);
   l.info(`New package for indexing: ${repo} (triggered by ${notifyEmail})`);
 
-  queue.add(async () => {
+  const job = queue.add(async () => {
     await processor.process();
   });
+
+  return job;
 }

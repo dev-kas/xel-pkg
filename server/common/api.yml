@@ -8,6 +8,53 @@ servers:
   - url: /api/v1
 
 paths:
+  /index/classic:
+    post:
+      summary: Submit a package for indexing
+      description: |
+        Submits a package repository for indexing in the registry.
+        The repository will be cloned, validated, and processed asynchronously.
+        The submitter will receive email notifications about the indexing status.
+      tags:
+        - Indexing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - email
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL of the Git repository containing the package
+                  example: https://github.com/username/package-name
+                email:
+                  type: string
+                  format: email
+                  description: Email address to receive notifications about the indexing process
+                  example: user@example.com
+      responses:
+        '200':
+          description: Package successfully submitted for indexing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Repository added to queue
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
   /packages:
     get:
       summary: Search packages
