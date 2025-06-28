@@ -10,6 +10,12 @@ export default express
     (req, res) => controller.byId(req, res)
   )
   .get(
+    '/:id/download',
+    ...Controller.validate('byId'),
+    Controller.validateRequest,
+    (req, res) => controller.byIdDownload(req, res)
+  )
+  .get(
     '/pkg/:id',
     ...Controller.validate('getTarballsInPackage'),
     Controller.validateRequest,

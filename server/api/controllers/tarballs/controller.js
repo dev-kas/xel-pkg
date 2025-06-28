@@ -81,11 +81,42 @@ class Controller {
     }
   }
 
+  /**
+   * Gets a tarball by its ID
+   * @param {import('express').Request} req - The request object
+   * @param {import('express').Response} res - The response object
+   */
   byId(req, res) {
-    TarballsService.getById(req.params.id)
+    TarballsService.getById(Number(req.params.id))
       .then((r) => {
-        if (r) res.json(r);
-        else res.status(404).end();
+        if (r) {
+          const url = new URL(
+            'download',
+            `${req.protocol}://${req.get('host')}${req.originalUrl.endsWith('/') ? req.originalUrl : req.originalUrl + '/'}`
+          );
+          r.url = url.toString();
+          res.json(r);
+        } else res.status(404).end();
+      })
+      .catch((error) => {
+        console.error('Error fetching version by id:', error);
+        res.status(error.status || 500).json({ error: error.message });
+      });
+  }
+
+  /**
+   * Downloads a tarball by its ID
+   * @param {import('express').Request} req - The request object
+   * @param {import('express').Response} res - The response object
+   */
+  byIdDownload(req, res) {
+    TarballsService.getById(Number(req.params.id))
+      .then(async (r) => {
+        if (r) {
+          res.redirect(r.url);
+          r.downloads++;
+          await r.save();
+        } else res.status(404).end();
       })
       .catch((error) => {
         console.error('Error fetching version by id:', error);

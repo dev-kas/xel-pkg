@@ -14,7 +14,7 @@ import counterModel from './counter.model.js';
  * @property {Object} integrity - Integrity information for the tarball
  * @property {String} integrity.algorithm - Algorithm used for integrity check
  * @property {String} integrity.hash - Hash of the tarball using the algorithm
- * @property {Date} publishedAt - Timestamp when the package was published
+ * @property {Number} downloads - Number of downloads
  */
 const tarballSchema = new mongoose.Schema(
   {
@@ -54,9 +54,10 @@ const tarballSchema = new mongoose.Schema(
         required: true,
       },
     },
-    publishedAt: {
-      type: Date,
-      default: Date.now,
+    downloads: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
   },
   {

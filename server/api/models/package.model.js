@@ -15,9 +15,6 @@ import counterModel from './counter.model.js';
  * @property {String} url - URL of the repository
  * @property {String} mirror - URL of the mirror
  * @property {String[]} tags - Tags for the package
- * @property {Number} downloads - Number of downloads
- * @property {Date} updatedAt - Timestamp when the package was last updated
- * @property {Date} publishedAt - Timestamp when the package was published
  * @property {Boolean} isDeprecated - Whether the package is deprecated
  * @property {String} deprecatedReason - Reason for deprecation
  */
@@ -70,19 +67,6 @@ const packageSchema = new mongoose.Schema(
         lowercase: true,
       },
     ],
-    downloads: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    publishedAt: {
-      type: Date,
-      default: Date.now,
-    },
     isDeprecated: {
       type: Boolean,
       default: false,

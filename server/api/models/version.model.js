@@ -13,13 +13,10 @@ import counterModel from './counter.model.js';
  * @property {Number} semver.minor - Minor version number.
  * @property {Number} semver.patch - Patch version number.
  * @property {Number} package - ID of the package.
- * @property {Number} downloads - Number of downloads.
  * @property {String} license - License of the package.
  * @property {String} dist_mode - Distribution mode of the package.
  * @property {String} xel - Xel version range.
  * @property {String} engine - Engine version range.
- * @property {Date} updatedAt - Timestamp when the version was last updated.
- * @property {Date} publishedAt - Timestamp when the version was published.
  */
 const versionSchema = new mongoose.Schema(
   {
@@ -54,11 +51,6 @@ const versionSchema = new mongoose.Schema(
     package: {
       type: Number,
       required: true,
-    },
-    downloads: {
-      type: Number,
-      default: 0,
-      min: 0,
     },
     license: {
       type: String,
