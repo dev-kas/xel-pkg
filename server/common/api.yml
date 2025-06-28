@@ -1,170 +1,226 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: xel-pkg API
   version: 1.0.0
-  description: Official package registry for the Xel programming language.
+  description: Official package registry API for the Xel programming language.
 
 servers:
   - url: http://localhost:3000/api/v1
-    description: Local development server
+    description: Development server
 
 components:
   schemas:
-
     Package:
       type: object
+      description: A Xel package.
       properties:
         id:
           type: integer
-          description: Unique identifier for the package
+          description: Unique identifier for the package.
+          readOnly: true
         gid:
           type: integer
-          description: Globally unique identifier for the package
+          description: Globally unique identifier for the package.
+          readOnly: true
         name:
           type: string
-          description: Name of the package
+          description: Name of the package (lowercase).
+          example: my_cool_package
         latest:
           type: integer
-          description: ID of the latest version of the package
+          description: ID of the latest version of the package.
+          nullable: true
         description:
           type: string
-          description: Description of the package
+          description: Description of the package.
           maxLength: 255
+          example: This package does amazing things.
         author:
           type: string
-          description: Author of the package
+          description: Author of the package.
+          example: John Doe
         repo_name:
           type: string
-          description: Name of the repository
+          description: Name of the repository (auto-generated).
+          example: pkg-123e4567e89b12d3a456426614174000
         url:
           type: string
-          description: URL of the repository
+          format: url
+          description: URL of the original repository.
+          example: https://github.com/johndoe/my-cool-package
         mirror:
           type: string
-          description: URL of the mirror
+          format: url
+          description: URL of the mirrored repository.
+          example: https://github.com/xel-pkg/pkg-123e4567e89b12d3a456426614174000
         tags:
           type: array
+          description: Tags associated with the package.
           items:
             type: string
-          description: Tags for the package
-        downloads:
-          type: integer
-          description: Number of downloads
+            example: utility
+        isDeprecated:
+          type: boolean
+          description: Indicates if the package is deprecated.
+          default: false
+        deprecatedReason:
+          type: string
+          description: Reason for deprecation.
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of package creation.
+          readOnly: true
         updatedAt:
           type: string
           format: date-time
-          description: Timestamp when the package was last updated
-        publishedAt:
-          type: string
-          format: date-time
-          description: Timestamp when the package was published
-        isDeprecated:
-          type: boolean
-          description: Whether the package is deprecated
-        deprecatedReason:
-          type: string
-          description: Reason for deprecation
+          description: Timestamp of last package update.
+          readOnly: true
+      required:
+        - name
+        - author
+        - url
+        - mirror
 
     Version:
       type: object
+      description: A specific version of a Xel package.
       properties:
         id:
           type: integer
-          description: Unique identifier for the version
+          description: Unique identifier for the version.
+          readOnly: true
         gid:
           type: integer
-          description: Globally unique identifier for the version
+          description: Globally unique identifier for the version.
+          readOnly: true
         version:
           type: string
-          description: String representation of the version
+          description: String representation of the version.
+          example: 1.0.0
         semver:
           type: object
+          description: Semantic versioning information.
           properties:
             major:
               type: integer
-              description: Major version number
+              description: Major version number.
+              example: 1
             minor:
               type: integer
-              description: Minor version number
+              description: Minor version number.
+              example: 0
             patch:
               type: integer
-              description: Patch version number
+              description: Patch version number.
+              example: 0
+          required:
+            - major
+            - minor
+            - patch
         package:
           type: integer
-          description: ID of the package
-        downloads:
-          type: integer
-          description: Number of downloads
+          description: ID of the package this version belongs to.
         license:
           type: string
-          description: License of the package
+          description: License of the package.
+          example: MIT
         dist_mode:
           type: string
-          enum: [release, pre-release]
-          description: Distribution mode of the package
+          description: Distribution mode (release or pre-release).
+          enum:
+            - release
+            - pre-release
         xel:
           type: string
-          description: Xel version range
+          description: Xel version range.
+          example: '>=1.0.0 <2.0.0'
         engine:
           type: string
-          description: Engine version range
+          description: Engine version range.
+          example: '*'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of version creation.
+          readOnly: true
         updatedAt:
           type: string
           format: date-time
-          description: Timestamp when the version was last updated
-        publishedAt:
-          type: string
-          format: date-time
-          description: Timestamp when the version was published
+          description: Timestamp of last version update.
+          readOnly: true
+      required:
+        - version
+        - semver
+        - package
+        - license
+        - dist_mode
+        - xel
+        - engine
 
     Tarball:
       type: object
+      description: A tarball file associated with a package version.
       properties:
         id:
           type: integer
-          description: Unique identifier for the tarball
+          description: Unique identifier for the tarball.
+          readOnly: true
         gid:
           type: integer
-          description: Globally unique identifier for the tarball
+          description: Globally unique identifier for the tarball.
+          readOnly: true
         package:
           type: integer
-          description: ID of the package
+          description: ID of the package.
         version:
           type: integer
-          description: ID of the version
+          description: ID of the version.
         url:
           type: string
-          format: uri
-          description: URL to download the tarball
+          format: url
+          description: URL of the tarball.
+          example: https://example.com/package-1.0.0.tar.gz
         size_bytes:
           type: integer
-          description: Size of the tarball in bytes
-          minimum: 1
+          description: Size of the tarball in bytes.
+          example: 1024000
         integrity:
           type: object
-          description: Integrity information for the tarball
+          description: Integrity information for verifying the tarball.
           properties:
             algorithm:
               type: string
-              description: Hashing algorithm used (e.g., sha512)
-              example: "sha512"
+              description: Hashing algorithm used.
+              example: sha256
             hash:
               type: string
-              description: Hash of the tarball contents
-              example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              description: Hash of the tarball.
+              example: e5b7a9d2c8a3f7e1d4b2c5a9e8d7c9a8b7f1e4d2c8a3f7e1d4b2c5a9e8d7c9a8
+          required:
+            - algorithm
+            - hash
         downloads:
           type: integer
-          description: Number of downloads
-          minimum: 0
+          description: Number of times the tarball has been downloaded.
           default: 0
         createdAt:
           type: string
           format: date-time
-          description: Timestamp when the tarball was created
+          description: Timestamp of tarball creation.
+          readOnly: true
         updatedAt:
           type: string
           format: date-time
-          description: Timestamp when the tarball was last updated
+          description: Timestamp of last tarball update.
+          readOnly: true
+      required:
+        - package
+        - version
+        - url
+        - size_bytes
+        - integrity
 
     Error:
       type: object
@@ -176,106 +232,154 @@ components:
             properties:
               message:
                 type: string
-                description: Error message
+                description: Error message.
+
+  parameters:
+    packageLimit:
+      name: limit
+      in: query
+      description: Maximum number of packages to return.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    packageOffset:
+      name: offset
+      in: query
+      description: Starting position for package results (for pagination).
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    packageQuery:
+      name: query
+      in: query
+      description: Search query string.
+      schema:
+        type: string
+    packageTags:
+      name: tags
+      in: query
+      description: Comma-separated list of tags to filter packages.
+      schema:
+        type: string
+    packageDeprecated:
+      name: deprecated
+      in: query
+      description: Include deprecated packages in the results.
+      schema:
+        type: boolean
+    packageIdParam:
+      name: id
+      in: path
+      description: The ID of the package.
+      required: true
+      schema:
+        type: integer
+    packageNameParam:
+      name: name
+      in: path
+      description: The name of the package.
+      required: true
+      schema:
+        type: string
+
+    versionLimit:
+      name: limit
+      in: query
+      description: Maximum number of versions to return.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    versionOffset:
+      name: offset
+      in: query
+      description: Starting position for version results (for pagination).
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    versionIdParam:
+      name: id
+      in: path
+      description: The ID of the version.
+      required: true
+      schema:
+        type: integer
+
+    tarballLimit:
+      name: limit
+      in: query
+      description: Maximum number of tarballs to return.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    tarballOffset:
+      name: offset
+      in: query
+      description: Starting position for tarball results (for pagination).
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    tarballIdParam:
+      name: id
+      in: path
+      description: The ID of the tarball.
+      required: true
+      schema:
+        type: integer
 
   responses:
-    ValidationError:
-      description: Validation error in request parameters
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              errors:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      description: Error message
-                    param:
-                      type: string
-                      description: The parameter that failed validation
-                    location:
-                      type: string
-                      description: Where the error occurred (body, query, params, etc.)
-
     NotFound:
-      description: The requested resource was not found
+      description: Resource not found.
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              error:
-                type: string
-                description: Error message
-                example: "Resource not found"
+            $ref: '#/components/schemas/Error'
+            example:
+              errors:
+                - message: Package not found
 
     ServerError:
-      description: Internal server error
+      description: Internal server error.
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              error:
-                type: string
-                description: Error message
-                example: "An unexpected error occurred"
+            $ref: '#/components/schemas/Error'
+            example:
+              errors:
+                - message: Internal server error
 
-    NoContent:
-      description: Operation completed successfully with no content to return
+    ValidationError:
+      description: Validation error.
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-                description: Success message
-                example: "Operation completed successfully"
+            $ref: '#/components/schemas/Error'
+            example:
+              errors:
+                - message: Invalid package ID
 
 paths:
-
-  # Packages Endpoints
   /packages:
     get:
-      summary: Search for packages
-      description: Returns a list of packages matching the search criteria.
+      summary: Search for packages.
+      description: Retrieve a list of packages, with optional filtering and pagination.
       parameters:
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-          description: Maximum number of packages to return
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            minimum: 0
-          description: Number of packages to skip
-        - in: query
-          name: query
-          schema:
-            type: string
-          description: Search query string
-        - in: query
-          name: tags
-          schema:
-            type: string
-          description: Comma-separated list of tags to filter by
-        - in: query
-          name: deprecated
-          schema:
-            type: boolean
-          description: Include deprecated packages
+        - $ref: '#/components/parameters/packageLimit'
+        - $ref: '#/components/parameters/packageOffset'
+        - $ref: '#/components/parameters/packageQuery'
+        - $ref: '#/components/parameters/packageTags'
+        - $ref: '#/components/parameters/packageDeprecated'
       responses:
         '200':
-          description: A list of packages
+          description: A list of packages.
           content:
             application/json:
               schema:
@@ -287,125 +391,67 @@ paths:
                       $ref: '#/components/schemas/Package'
                   total:
                     type: integer
-                    description: Total number of packages matching the query
+                    description: Total number of packages matching the query.
                   limit:
                     type: integer
-                    description: The requested limit
+                    description: The requested limit.
                   offset:
                     type: integer
-                    description: The requested offset
+                    description: The requested offset.
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /packages/name/{name}:
-    get:
-      summary: Get a package by name
-      parameters:
-        - in: path
-          name: name
-          required: true
-          schema:
-            type: string
-          description: Name of the package to retrieve
-      responses:
-        '200':
-          description: A package object
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Package'
-        '404':
-          description: Package not found
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServerError'
 
   /packages/id/{id}:
     get:
-      summary: Get a package by ID
+      summary: Get a package by ID.
+      description: Retrieve a specific package by its unique ID.
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID of the package to retrieve
+        - $ref: '#/components/parameters/packageIdParam'
       responses:
         '200':
-          description: A package object
+          description: The requested package.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Package'
         '404':
-          description: Package not found
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServerError'
 
-  # Versions Endpoints
-  /versions/{id}:
+  /packages/name/{name}:
     get:
-      summary: Get a version by ID
+      summary: Get a package by name.
+      description: Retrieve a specific package by its name.
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID of the version to retrieve
+        - $ref: '#/components/parameters/packageNameParam'
       responses:
         '200':
-          description: A version object
+          description: The requested package.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Version'
+                $ref: '#/components/schemas/Package'
         '404':
-          description: Version not found
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServerError'
 
   /versions/pkg/{id}:
     get:
-      summary: Get all versions for a package
+      summary: Get versions for a package.
+      description: Retrieve a list of versions associated with a specific package ID.
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID of the package to retrieve versions for
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-          description: Maximum number of versions to return
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            minimum: 0
-          description: Number of versions to skip
+        - $ref: '#/components/parameters/packageIdParam'
+        - $ref: '#/components/parameters/versionLimit'
+        - $ref: '#/components/parameters/versionOffset'
       responses:
         '200':
-          description: A list of versions
+          description: A list of versions.
           content:
             application/json:
               schema:
@@ -417,105 +463,53 @@ paths:
                       $ref: '#/components/schemas/Version'
                   total:
                     type: integer
-                    description: Total number of versions for the package
+                    description: Total number of versions for the package.
                   limit:
                     type: integer
-                    description: The requested limit
+                    description: The requested limit.
                   offset:
                     type: integer
-                    description: The requested offset
+                    description: The requested offset.
+        '422':
+          $ref: '#/components/responses/ValidationError'
         '500':
-          description: Internal server error
+          $ref: '#/components/responses/ServerError'
+
+  /versions/{id}:
+    get:
+      summary: Get a version by ID.
+      description: Retrieve a specific version by its unique ID.
+      parameters:
+        - $ref: '#/components/parameters/versionIdParam'
+      responses:
+        '200':
+          description: The requested version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '404':
+          description: Version not found.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  # Tarballs Endpoints
-  /tarballs/{id}:
-    get:
-      summary: Get a tarball by ID
-      description: Retrieve tarball metadata by its ID
-      tags:
-        - Tarballs
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID of the tarball to retrieve
-      responses:
-        '200':
-          description: Tarball metadata
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Tarball'
-        '400':
+        '422':
           $ref: '#/components/responses/ValidationError'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/ServerError'
-          
-  /tarballs/{id}/download:
-    get:
-      summary: Download a tarball
-      description: >
-        Redirects to the download URL for the specified tarball.
-        This endpoint also increments the download counter for the tarball.
-      tags:
-        - Tarballs
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID of the tarball to download
-      responses:
-        '302':
-          description: Redirect to the tarball download URL
-          headers:
-            Location:
-              schema:
-                type: string
-                format: uri
-                example: https://example.com/package-1.0.0.tgz
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/ServerError'
 
   /tarballs/pkg/{id}:
     get:
-      summary: Get all tarballs for a package
+      summary: Get tarballs for a package.
+      description: Retrieve a list of tarballs associated with a specific package ID.
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID of the package to retrieve tarballs for
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-          description: Maximum number of tarballs to return
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            minimum: 0
-          description: Number of tarballs to skip
+        - $ref: '#/components/parameters/packageIdParam'
+        - $ref: '#/components/parameters/tarballLimit'
+        - $ref: '#/components/parameters/tarballOffset'
       responses:
         '200':
-          description: A list of tarballs
+          description: A list of tarballs.
           content:
             application/json:
               schema:
@@ -527,46 +521,29 @@ paths:
                       $ref: '#/components/schemas/Tarball'
                   total:
                     type: integer
-                    description: Total number of tarballs for the package
+                    description: Total number of tarballs for the package.
                   limit:
                     type: integer
-                    description: The requested limit
+                    description: The requested limit.
                   offset:
                     type: integer
-                    description: The requested offset
+                    description: The requested offset.
+        '422':
+          $ref: '#/components/responses/ValidationError'
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServerError'
 
   /tarballs/ver/{id}:
     get:
-      summary: Get all tarballs for a version
+      summary: Get tarballs for a version.
+      description: Retrieve a list of tarballs associated with a specific version ID.
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID of the version to retrieve tarballs for
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-          description: Maximum number of tarballs to return
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            minimum: 0
-          description: Number of tarballs to skip
+        - $ref: '#/components/parameters/versionIdParam'
+        - $ref: '#/components/parameters/tarballLimit'
+        - $ref: '#/components/parameters/tarballOffset'
       responses:
         '200':
-          description: A list of tarballs
+          description: A list of tarballs.
           content:
             application/json:
               schema:
@@ -578,24 +555,68 @@ paths:
                       $ref: '#/components/schemas/Tarball'
                   total:
                     type: integer
-                    description: Total number of tarballs for the version
+                    description: Total number of tarballs for the version.
                   limit:
                     type: integer
-                    description: The requested limit
+                    description: The requested limit.
                   offset:
                     type: integer
-                    description: The requested offset
+                    description: The requested offset.
+        '422':
+          $ref: '#/components/responses/ValidationError'
         '500':
-          description: Internal server error
+          $ref: '#/components/responses/ServerError'
+
+  /tarballs/{id}:
+    get:
+      summary: Get a tarball by ID.
+      description: Retrieve a specific tarball by its unique ID.
+      parameters:
+        - $ref: '#/components/parameters/tarballIdParam'
+      responses:
+        '200':
+          description: The requested tarball.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tarball'
+        '404':
+          description: Tarball not found.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    
+  /tarballs/{id}/download:
+    get:
+      summary: Download a tarball by ID.
+      description: Redirects to the tarball's URL for download.
+      parameters:
+        - $ref: '#/components/parameters/tarballIdParam'
+      responses:
+        '302':
+          description: Redirect to the tarball URL.
+          headers:
+            Location:
+              schema:
+                type: string
+                format: url
+                description: The URL of the tarball to download.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
 
-  # Indexing Endpoint
   /index/classic:
     post:
-      summary: Submit a repository for indexing
+      summary: Add a package for indexing (classic submission).
+      description: Submit a package repository for indexing using the classic method (URL and email).
       requestBody:
         required: true
         content:
@@ -606,17 +627,19 @@ paths:
                 url:
                   type: string
                   format: url
-                  description: URL of the repository to index
+                  description: The URL of the package repository.
+                  example: https://github.com/example/my-package
                 email:
                   type: string
                   format: email
-                  description: Email address to notify when indexing is complete
+                  description: The email address to notify about the indexing status.
+                  example: user@example.com
               required:
                 - url
                 - email
       responses:
         '200':
-          description: Repository added to queue
+          description: Repository added to the indexing queue.
           content:
             application/json:
               schema:
@@ -624,16 +647,41 @@ paths:
                 properties:
                   message:
                     type: string
-                    description: Success message
+                    example: Repository added to queue
         '422':
-          description: Invalid request body
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ValidationError'
         '500':
-          description: Internal server error
+          $ref: '#/components/responses/ServerError'
+  /brew:
+    get:
+      summary: Brew coffee (or not).
+      description: Simulates brewing coffee. Returns 200 OK with a "Juice successfully brewed" message 20% of the time. Otherwise, returns 418 I'm a teapot with a relevant message.
+      parameters:
+        - name: luck
+          in: query
+          description: A number from 0-100 to represent how lucky you want to be. 0 is no luck, 100 is guaranteed juice.
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+      responses:
+        '200':
+          description: Juice successfully brewed.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Juice successfully brewed. Wait, what?
+        '418':
+          description: I'm a teapot.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: I'm a teapot. I cannot brew coffee, because I am, quite literally, a teapot.
