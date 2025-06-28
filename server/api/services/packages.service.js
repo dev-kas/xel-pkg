@@ -17,7 +17,11 @@ class PackagesService {
     try {
       const [packages, total] = await Promise.all([
         db.all(options),
-        db.count(options),
+        db.count({
+          query: options.query || '',
+          tags: options.tags || [],
+          deprecated: options.deprecated || false,
+        }),
       ]);
 
       return {

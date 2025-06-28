@@ -37,7 +37,12 @@ class Controller {
         req.params.id,
         params
       );
-      res.json(Array.isArray(result) ? result : []);
+      res.json({
+        versions: Array.isArray(result.versions) ? result.versions : [],
+        total: result.total || 0,
+        limit: result.limit || params.limit,
+        offset: result.offset || params.offset,
+      });
     } catch (error) {
       console.error('Search error:', error);
       res.status(500).json({ error: error.message });

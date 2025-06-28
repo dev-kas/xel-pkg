@@ -21,11 +21,13 @@ class VersionsDatabase {
         error.status = 404;
         throw error;
       }
-      return await Version.find({ package: pkg._id })
+
+      const v = await Version.find({ package: pkg.id })
         .sort({ 'semver.major': -1, 'semver.minor': -1, 'semver.patch': -1 })
         .skip(offset)
         .limit(limit)
         .populate('package', 'name');
+      return v;
     } catch (error) {
       logger.error(`Error fetching versions for package ${packageId}:`, error);
       throw error;
@@ -45,7 +47,7 @@ class VersionsDatabase {
         error.status = 404;
         throw error;
       }
-      return await Version.countDocuments({ package: pkg._id });
+      return await Version.countDocuments({ package: pkg.id });
     } catch (error) {
       logger.error(`Error counting versions for package ${packageId}:`, error);
       throw error;
@@ -81,7 +83,7 @@ class VersionsDatabase {
         throw error;
       }
       return await Version.findOne({
-        package: pkg._id,
+        package: pkg.id,
         version: version,
       }).populate('package', 'name');
     } catch (error) {

@@ -73,7 +73,12 @@ class Controller {
       };
 
       const result = await PackagesService.getAll(params);
-      res.json(Array.isArray(result) ? result : []);
+      res.json({
+        packages: Array.isArray(result.packages) ? result.packages : [],
+        total: result.total || 0,
+        limit: result.limit || params.limit,
+        offset: result.offset || params.offset,
+      });
     } catch (error) {
       console.error('Search error:', error);
       res.status(500).json({ error: 'Internal server error' });

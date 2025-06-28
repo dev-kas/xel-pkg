@@ -24,6 +24,10 @@ class PackagesDatabase {
     try {
       const conditions = {};
 
+      const sortOptions = query
+        ? { score: { $meta: 'textScore' }, updatedAt: -1 }
+        : { updatedAt: -1 };
+
       if (query) {
         conditions.$text = { $search: query };
       }
@@ -36,11 +40,15 @@ class PackagesDatabase {
         conditions.isDeprecated = false;
       }
 
-      return await Package.find(conditions)
-        .sort({ updatedAt: -1 })
+      return await Package.find(conditions, {
+        score: { $meta: 'textScore' },
+      })
+        .sort(sortOptions)
         .skip(offset)
         .limit(limit)
-        .populate('latest');
+        .populate('latest')
+        // .lean()
+        .exec();
     } catch (error) {
       logger.error('Error fetching packages:', error);
       throw error;
@@ -54,7 +62,7 @@ class PackagesDatabase {
    */
   async getById(id) {
     try {
-      return await Package.findOne({ id: id }).populate('latest');
+      return await Package.findOne({ id });
     } catch (error) {
       logger.error(`Error finding package by id ${id}:`, error);
       throw error;
@@ -68,9 +76,7 @@ class PackagesDatabase {
    */
   async getByName(name) {
     try {
-      return await Package.findOne({ name: name.toLowerCase() }).populate(
-        'latest'
-      );
+      return await Package.findOne({ name: name.toLowerCase() });
     } catch (error) {
       logger.error(`Error finding package by name ${name}:`, error);
       throw error;
@@ -118,7 +124,7 @@ class PackagesDatabase {
         id,
         { ...updateData, updatedAt: Date.now() },
         { new: true, runValidators: true }
-      ).populate('latest');
+      );
     } catch (error) {
       logger.error(`Error updating package ${id}:`, error);
       throw error;
@@ -141,7 +147,7 @@ class PackagesDatabase {
           updatedAt: Date.now(),
         },
         { new: true }
-      ).populate('latest');
+      );
     } catch (error) {
       logger.error(`Error deprecating package ${id}:`, error);
       throw error;
@@ -185,12 +191,23 @@ class PackagesDatabase {
    * @param {Object} filter - Filter conditions
    * @returns {Promise<number>} Total count
    */
-  async count(filter = {}) {
+  async count({ query = '', tags = [], deprecated = false } = {}) {
     try {
-      // if (!deprecated) {
-      filter.isDeprecated = false;
-      // }
-      return await Package.countDocuments(filter);
+      const conditions = {};
+
+      if (query) {
+        conditions.$text = { $search: query };
+      }
+
+      if (tags && tags.length > 0) {
+        conditions.tags = { $all: tags };
+      }
+
+      if (!deprecated) {
+        conditions.isDeprecated = false;
+      }
+
+      return await Package.countDocuments(conditions);
     } catch (error) {
       logger.error('Error counting packages:', error);
       throw error;
