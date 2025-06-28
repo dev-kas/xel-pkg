@@ -5,10 +5,10 @@ info:
   description: Official package registry API for the Xel programming language.
 
 servers:
-  - url: http://localhost:3000/api/v1
-    description: Development server
   - url: https://pkg.xel.glitchiethedev.com/api/v1
     description: Production server
+  - url: http://localhost:3000/api/v1
+    description: Development server
 
 components:
   schemas:
@@ -368,6 +368,28 @@ components:
               errors:
                 - message: Invalid package ID
 
+  requestBodies:
+    IndexPackageClassic:
+      description: Request body for submitting a package for indexing.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              url:
+                type: string
+                format: url
+                description: The URL of the package repository.
+                example: https://github.com/example/my-package
+              email:
+                type: string
+                format: email
+                description: The email address to notify about the indexing status.
+                example: user@example.com
+            required:
+              - url
+              - email
 paths:
   /packages:
     get:
@@ -620,25 +642,7 @@ paths:
       summary: Add a package for indexing (classic submission).
       description: Submit a package repository for indexing using the classic method (URL and email).
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                url:
-                  type: string
-                  format: url
-                  description: The URL of the package repository.
-                  example: https://github.com/example/my-package
-                email:
-                  type: string
-                  format: email
-                  description: The email address to notify about the indexing status.
-                  example: user@example.com
-              required:
-                - url
-                - email
+        $ref: '#/components/requestBodies/IndexPackageClassic'
       responses:
         '200':
           description: Repository added to the indexing queue.
@@ -687,3 +691,9 @@ paths:
                   message:
                     type: string
                     example: I'm a teapot. I cannot brew coffee, because I am, quite literally, a teapot.
+    head:
+      summary: Health check for the API.
+      description: Returns a 200 OK to indicate the API is available. Useful for health checks.
+      responses:
+        '200':
+          description: The API is available.
