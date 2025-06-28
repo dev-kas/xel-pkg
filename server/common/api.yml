@@ -207,6 +207,117 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
 
+  /tarballs/{id}:
+    get:
+      summary: Get tarball by ID
+      description: Retrieve a specific tarball by its numeric ID
+      tags:
+        - Tarballs
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Tarball details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tarball'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /tarballs/pkg/{id}:
+    get:
+      summary: Get tarballs for a package
+      description: Retrieve all tarballs for a specific package with pagination
+      tags:
+        - Tarballs
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: List of tarballs for the package
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tarballs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tarball'
+                  total:
+                    type: integer
+                    description: Total number of tarballs available
+                    example: 5
+                  limit:
+                    type: integer
+                    description: Number of items per page
+                    example: 20
+                  offset:
+                    type: integer
+                    description: Number of items skipped
+                    example: 0
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /tarballs/ver/{id}:
+    get:
+      summary: Get tarballs for a version
+      description: Retrieve all tarballs for a specific version with pagination
+      tags:
+        - Tarballs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric ID of the version
+          schema:
+            type: integer
+            minimum: 1
+          example: 789
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: List of tarballs for the version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tarballs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tarball'
+                  total:
+                    type: integer
+                    description: Total number of tarballs available
+                    example: 2
+                  limit:
+                    type: integer
+                    description: Number of items per page
+                    example: 20
+                  offset:
+                    type: integer
+                    description: Number of items skipped
+                    example: 0
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
 components:
   parameters:
     id:
@@ -280,6 +391,64 @@ components:
         default: false
 
   schemas:
+    Tarball:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique numeric ID of the tarball
+          example: 123
+        gid:
+          type: integer
+          description: Global unique ID
+          example: 456
+        package:
+          type: integer
+          description: ID of the package this tarball belongs to
+          example: 789
+        version:
+          type: integer
+          description: ID of the version this tarball belongs to
+          example: 101
+        url:
+          type: string
+          format: uri
+          description: URL to download the tarball
+          example: "https://example.com/package-1.0.0.tgz"
+        size_bytes:
+          type: integer
+          description: Size of the tarball in bytes
+          example: 1024
+        integrity:
+          type: object
+          properties:
+            algorithm:
+              type: string
+              description: Hashing algorithm used
+              example: "sha512"
+            hash:
+              type: string
+              description: Hash of the tarball
+              example: "sha512-abc123..."
+          required:
+            - algorithm
+            - hash
+        publishedAt:
+          type: string
+          format: date-time
+          description: When the tarball was published
+          example: "2023-01-01T00:00:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          description: When the tarball record was created
+          example: "2023-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the tarball record was last updated
+          example: "2023-01-01T00:00:00Z"
+
     Package:
       type: object
       properties:
